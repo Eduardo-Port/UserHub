@@ -6,15 +6,15 @@ import io.github.Eduardo_Port.userhubapi.model.User;
 import io.github.Eduardo_Port.userhubapi.service.UserHubService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
+
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 public class UserHubController {
@@ -40,10 +40,9 @@ public class UserHubController {
         return ResponseEntity.ok().build();
         }
 
-    @PutMapping
-    public ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserRequest dto) {
-        User user = service.getUserByEmail(dto.email()).orElseThrow();
-        UUID id = service.update(user, dto);
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserRequest dto, @PathVariable UUID id) {
+        User user = service.update(id, dto);
         URI loc = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
         UserResponse response = new UserResponse(user.getIdUser(), user.getName(), user.getEmail(), user.getEmailVerified(), user.getCreatedAt(), user.getUpdatedAt(), loc);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -55,16 +54,28 @@ public class UserHubController {
 
         return service.getUserById(idUser)
                 .map(user -> {
-                    UserResponse response = new UserResponse(user.getIdUser(), user.getName(), user.getEmail(), user.getEmailVerified(), user.getCreatedAt(), user.getUpdatedAt());
+                    UserResponse response = new UserResponse(user);
                     return ResponseEntity.ok(response);
                 }).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
     @GetMapping("/list")
-    public ResponseEntity<List<UserResponse>> listUsers() {
-        List<User> users = service.getUsers();
-        List<UserResponse> response = users.stream()
-                .map(user -> new UserResponse(user.getIdUser(), user.getName(), user.getEmail(), user.getEmailVerified(), user.getCreatedAt(), user.getUpdatedAt()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Page<UserResponse>> listUsers(
+            @RequestParam(
+                required = false,
+                defaultValue = "0") int page,
+            @RequestParam(
+                required = false,
+                defaultValue = "3") int size,
+            @RequestParam(
+                    required = false
+            ) String name,
+            @RequestParam(required = false) String email) {
+        Page<User> users = service.getUsers(page, size, name, email);
+        Page<UserResponse> res = users.map(user -> {
+            URI loc = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(user.getIdUser()).toUri();
+            return new UserResponse(user.getIdUser(), user.getName(), user.getEmail(), user.getEmailVerified(), user.getCreatedAt(), user.getUpdatedAt(), loc);
+        });
+        return ResponseEntity.ok(res);
     }
 }

@@ -4,14 +4,19 @@ import io.github.Eduardo_Port.userhubapi.dtos.UserRequest;
 import io.github.Eduardo_Port.userhubapi.exceptions.EmailAlreadyUsed;
 import io.github.Eduardo_Port.userhubapi.model.User;
 import io.github.Eduardo_Port.userhubapi.repository.UserHubRepository;
+import io.github.Eduardo_Port.userhubapi.repository.specs.UserSpecs;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,12 +26,16 @@ public class UserHubService {
     private final String salt = BCrypt.gensalt();
     @Autowired
     private UserHubRepository userHubRepository;
-    public List<User> getUsers() {
-        return userHubRepository.findAll();
-    }
+    public Page<User> getUsers(int page, int size, String name, String email) {
+        Specification<User> spec = UserSpecs.withFilter(name, email);
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                Sort.Direction.ASC,
+                "name"
+        );
 
-    public Optional<User> getUserByEmail(String email) {
-        return userHubRepository.findByEmail(email);
+        return userHubRepository.findAll(spec, pageRequest);
     }
 
     public Optional<User> getUserById(UUID id) {
@@ -66,12 +75,13 @@ public class UserHubService {
         userHubRepository.reactivateUser(email);
     }
 
-    public UUID update(User user, @Valid UserRequest dto) {
+    public User update(UUID id, @Valid UserRequest dto) {
+        User user = getUserById(id).orElseThrow();
         user.setName(dto.name());
         user.setPasswordHash(hashingPassword(dto.password()));
         user.setUpdatedAt(Timestamp.from(Instant.now()));
         userHubRepository.save(user);
-        return user.getIdUser();
+        return user;
     }
 
     public boolean emailIsUnique(String email) {

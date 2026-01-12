@@ -1,6 +1,7 @@
 package io.github.Eduardo_Port.userhubapi.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.github.Eduardo_Port.userhubapi.model.User;
 
 import java.net.URI;
 import java.sql.Timestamp;
@@ -17,9 +18,6 @@ public record UserResponse(
         Timestamp updatedAt,
         URI location
 ) {
-    public UserResponse(UUID idUSer, String name, String email, boolean emailVerified, Timestamp createdAt, Timestamp updatedAt) {
-        this(idUSer, name, email, emailVerified, createdAt,updatedAt, null);
-    }
 
     public UserResponse(UUID idUSer, String name, String email, boolean emailVerified, Timestamp createdAt, Timestamp updatedAt, URI location) {
         this.idUSer = idUSer;
@@ -29,5 +27,9 @@ public record UserResponse(
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.location = location;
+    }
+
+    public UserResponse(User user) {
+        this(user.getIdUser(), user.getName(), user.getEmail(), user.getEmailVerified(), user.getCreatedAt(),user.getUpdatedAt(), null);
     }
 }
