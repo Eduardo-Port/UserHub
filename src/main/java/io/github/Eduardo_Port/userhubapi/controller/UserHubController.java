@@ -30,7 +30,7 @@ public class UserHubController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        service.deleteByEmail(id);
+        service.deleteById(id);
         return ResponseEntity.ok().build();
     }
 

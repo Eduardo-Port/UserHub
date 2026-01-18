@@ -5,6 +5,8 @@ import jakarta.validation.constraints.*;
 public record UserRequest(
         @NotNull
         @NotBlank
+        @Pattern(regexp = "^[a-zA-ZÀ-ÖØ-öø-ÿ\\s]+$",
+                message = "O nome deve conter apenas letras e espaços.")
         String name,
         @NotNull
         @NotBlank
