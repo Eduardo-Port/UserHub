@@ -6,7 +6,6 @@ import io.github.Eduardo_Port.userhubapi.model.Status;
 import io.github.Eduardo_Port.userhubapi.model.User;
 import io.github.Eduardo_Port.userhubapi.repository.UserHubRepository;
 import io.github.Eduardo_Port.userhubapi.repository.specs.UserSpecs;
-import io.github.Eduardo_Port.userhubapi.utils.XssSanitizerUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -49,14 +48,12 @@ public class UserHubService {
     }
     @Transactional
     public User createUser(UserRequest user) {
-        String safeName = XssSanitizerUtils.stripAllTags(user.name());
-        String safeEmail = XssSanitizerUtils.stripAllTags(user.email());
         if(!emailIsUnique(user.email())) {
             throw new EmailAlreadyUsed();
         }
         User userCreated = new User();
-        userCreated.setName(safeName);
-        userCreated.setEmail(safeEmail);
+        userCreated.setName(user.name());
+        userCreated.setEmail(user.email());
         userCreated.setPasswordHash(hashingPassword(user.password()));
         userCreated.setStatus(Status.ACTIVE);
         userCreated.setCreatedAt(Timestamp.from(Instant.now()));

@@ -40,13 +40,13 @@ class UserHubServiceTest {
     @Test
     @DisplayName("Should create User succesfuly when email is unique")
     void createUserCase1() {
-        UserRequest user = new UserRequest("Eduardo<b>", "edu.friv10@gmail.com", "123456789");
+        UserRequest user = new UserRequest("Eduardo", "edu.friv10@gmail.com", "123456789");
         when(userHubRepository.findByEmail(user.email())).thenReturn(Optional.empty());
         when(userHubRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         User createdUser = service.createUser(user);
 
         assertNotNull(createdUser);
-        assertEquals("Eduardo", createdUser.getName());
+        assertEquals(user.name(), createdUser.getName());
         assertEquals(createdUser.getEmail(), user.email());
         assertEquals(Status.ACTIVE, createdUser.getStatus());
         assertNotNull(createdUser.getCreatedAt());
@@ -86,6 +86,7 @@ class UserHubServiceTest {
 
     @Test
     void reactivateUser() {
+
     }
 
     @Test
