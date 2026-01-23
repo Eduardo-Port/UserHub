@@ -31,6 +31,10 @@ public class UserHubService {
     @Autowired
     private UserHubRepository userHubRepository;
 
+    public Optional<User> findUserById(UUID id) {
+        return userHubRepository.findById(id);
+    }
+
     public Page<User> getUsers(int page, int size, String name, String email) {
         Specification<User> spec = UserSpecs.withFilter(name, email);
         PageRequest pageRequest = PageRequest.of(
@@ -41,10 +45,6 @@ public class UserHubService {
         );
 
         return userHubRepository.findAll(spec, pageRequest);
-    }
-
-    public Optional<User> getUserById(UUID id) {
-        return userHubRepository.findById(id);
     }
     @Transactional
     public User createUser(UserRequest user) {
@@ -81,10 +81,13 @@ public class UserHubService {
 
     @Transactional
     public User update(UUID id, @Valid UserRequest dto) {
-        User user = getUserById(id).orElseThrow();
-        user.setName(dto.name());
-        user.setPasswordHash(hashingPassword(dto.password()));
-        return user;
+        User user = userHubRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (user.getEmail().equals(dto.email())) {
+            user.setName(dto.name());
+            user.setPasswordHash(hashingPassword(dto.password()));
+            return user;
+        }
+        else throw new EntityNotFoundException("Send the same email that you put in register");
     }
 
     private boolean emailIsUnique(String email) {

@@ -52,7 +52,7 @@ public class UserHubController {
     public ResponseEntity<UserResponse> findUserById(@PathVariable String id) {
         var idUser = UUID.fromString(id);
 
-        return service.getUserById(idUser)
+        return service.findUserById(idUser)
                 .map(user -> {
                     UserResponse response = new UserResponse(user);
                     return ResponseEntity.ok(response);

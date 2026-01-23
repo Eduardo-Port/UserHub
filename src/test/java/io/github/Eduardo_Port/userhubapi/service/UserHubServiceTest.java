@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Optional;
@@ -73,7 +76,6 @@ class UserHubServiceTest {
         when(userHubRepository.findById(id)).thenReturn(Optional.of(user));
         service.deleteById(id);
         assertEquals(Status.INACTIVE, user.getStatus());
-       // verify(userHubRepository, times(1)).save(any(User.class));
     }
     @Test
     @DisplayName("Should throw EntityNotFoundException when User does not exists")
@@ -85,11 +87,56 @@ class UserHubServiceTest {
     }
 
     @Test
-    void reactivateUser() {
-
+    @DisplayName("Should change status to ACTIVE if user exists and is INACTIVE")
+    void reactivateUserCase1() {
+        String email = "eduardo17.pro16@gmail.com";
+        User user = new User();
+        //user.setEmail(email);
+        user.setStatus(Status.INACTIVE);
+        when(userHubRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        service.reactivateUser(email);
+        assertEquals(Status.ACTIVE, user.getStatus());
     }
 
     @Test
-    void update() {
+    @DisplayName("Should throw EntityNotFoundException when User does not exists")
+    void reactivateUserCase2() {
+        String email = "eduardo17.pro16@gmail.com";
+        when(userHubRepository.findByEmail(email)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> service.reactivateUser(email));
+    }
+
+    @Test
+    @DisplayName("Should update user name or password with the necessity")
+    void updateCase1() {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        UUID id = UUID.randomUUID();
+        UserRequest userRequest = new UserRequest("Eduardo", "Oliveira@gmail.com", "1588915000");
+        User user1 = new User();
+        user1.setEmail("Oliveira@gmail.com");
+        when(userHubRepository.findById(id)).thenReturn(Optional.of(user1));
+        User user = service.update(id, userRequest);
+        assertEquals(user.getEmail(), userRequest.email());
+        assertEquals(user.getName(), userRequest.name());
+        assertTrue(passwordEncoder.matches( userRequest.password(), user.getPasswordHash()));
+    }
+    @Test
+    @DisplayName("Should throw EntityNotFoundException because user isnt found")
+    void updateCase2() {
+        UUID id = UUID.randomUUID();
+        UserRequest userRequest = new UserRequest("Eduardo", "Oliveira@gmail.com", "1588915000");
+        when(userHubRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> service.update(id, userRequest));
+    }
+
+    @Test
+    @DisplayName("Should throw EntityNotFoundException because the founded email is different ")
+    void updateCase3() {
+        UUID id = UUID.randomUUID();
+        UserRequest userRequest = new UserRequest("Eduardo", "Olivei@gmail.com", "1588915000");
+        User user1 = new User();
+        user1.setEmail("Oliveira@gmail.com");
+        when(userHubRepository.findById(id)).thenReturn(Optional.of(user1));
+        assertThrows(EntityNotFoundException.class, () -> service.update(id, userRequest));
     }
 }
