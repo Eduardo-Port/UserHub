@@ -82,12 +82,9 @@ public class UserHubService {
     @Transactional
     public User update(UUID id, @Valid UserRequest dto) {
         User user = userHubRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (user.getEmail().equals(dto.email())) {
-            user.setName(dto.name());
-            user.setPasswordHash(hashingPassword(dto.password()));
-            return user;
-        }
-        else throw new EntityNotFoundException("Send the same email that you put in register");
+        user.setName(dto.name());
+        user.setPasswordHash(hashingPassword(dto.password()));
+        return user;
     }
 
     private boolean emailIsUnique(String email) {

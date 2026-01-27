@@ -1,5 +1,6 @@
 package io.github.Eduardo_Port.userhubapi.repository.specs;
 
+import io.github.Eduardo_Port.userhubapi.model.Status;
 import io.github.Eduardo_Port.userhubapi.model.User;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -17,6 +18,10 @@ public class UserSpecs {
             if(email != null && !email.isBlank()) {
                 predicates.add(criteriaBuilder.equal(root.get("email"), email));
             }
+
+            Status status = Status.ACTIVE;
+
+            predicates.add(criteriaBuilder.equal(root.get("status"), status.name()));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
